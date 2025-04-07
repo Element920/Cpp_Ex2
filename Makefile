@@ -1,38 +1,39 @@
 #israelmor555@gmail.com
-#206508954
 
-#!make -f
+CXX = g++
+CXXFLAGS = -Wall -Wextra -std=c++11 -g
 
-CXX = clang++
-CXXFLAGS = -std=c++11 -Werror -Wsign-conversion
-VALGRIND_FLAGS = -v --leak-check=full --show-leak-kinds=all --error-exitcode=99
+SRC = Graph.cpp main.cpp Algorithms.cpp DataStructures.cpp
+OBJS = $(SRC:.cpp=.o)
+EXEC = graph
 
-SOURCES = Graph.cpp Algorithms.cpp TestCounter.cpp Test.cpp
-OBJECTS=$(subst .cpp,.o,$(SOURCES))
+TEST_SRC = Tests.cpp Algorithms.cpp Graph.cpp DataStructures.cpp
+TEST_OBJS = $(TEST_SRC:.cpp=.o)
+TEST_EXEC = test_graph
 
+all: $(EXEC)
 
-all: demo 	
+$(EXEC): $(OBJS)
+	$(CXX) $(CXXFLAGS) $^ -o $@
 
-run: demo
-	./$<
-
-demo: Demo.o $(filter-out TestCounter.o Test.o, $(OBJECTS))
-	$(CXX) $(CXXFLAGS) $^ -o demo
-
-test: TestCounter.o Test.o $(OBJECTS)
-	$(CXX) $(CXXFLAGS) $^ -o test
-
-tidy:
-	clang-tidy $(SOURCES) -checks=bugprone-*,clang-analyzer-*,cppcoreguidelines-*,performance-*,portability-*,readability-*,-cppcoreguidelines-pro-bounds-pointer-arithmetic,-cppcoreguidelines-owning-memory --warnings-as-errors=-* --
-
-valgrind: demo test
-	valgrind --tool=memcheck $(VALGRIND_FLAGS) ./demo 2>&1 | { egrep "lost| at " || true; }
-	valgrind --tool=memcheck $(VALGRIND_FLAGS) ./test 2>&1 | { egrep "lost| at " || true; }
+$(TEST_EXEC): $(TEST_OBJS)
+	$(CXX) $(CXXFLAGS) $^ -o $@
 
 %.o: %.cpp
-	$(CXX) $(CXXFLAGS) --compile $< -o $@
+	$(CXX) $(CXXFLAGS) -c $< -o $@
+
+main: $(EXEC)
+	./$(EXEC)
+
+test: $(TEST_EXEC)
+	./$(TEST_EXEC)
+
+valgrind: $(EXEC)
+	valgrind --leak-check=full --show-leak-kinds=all ./$(EXEC)
+
+valgrind_tests: $(TEST_EXEC)
+	valgrind --leak-check=full --show-leak-kinds=all ./$(TEST_EXEC)
+
 
 clean:
-	rm -f *.o demo test
-
-
+	rm -f $(OBJS) $(TEST_OBJS) $(EXEC) $(TEST_EXEC)

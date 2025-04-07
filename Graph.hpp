@@ -1,42 +1,40 @@
-// israelmor555@gmail.com
-// 206508954
-#ifndef GRAPH_H
-#define GRAPH_H
-#include <iostream>
-#include <stdexcept>
-#include <vector>
+//israelmor555@gmail.com
+
 #pragma once
-#include <iostream>
-#include <vector>
-#include <string>
 
-namespace ariel {
+namespace graph {
+
     class Graph {
-    private:
-        std::vector<std::vector<int>> adjMatrix;
-        std::string getGraphString(const std::vector<std::vector<int>> &matrix) const;
-
     public:
-        Graph();
-        void loadGraph(const std::vector<std::vector<int>> &matrix);
-        std::string printGraph() const;
-        unsigned int getNumVertices() const;
-        int getEdgeWeight(unsigned int from, unsigned int to) const;
-        Graph operator+(const Graph &other) const;
-        Graph operator*(const Graph &other) const;
-        Graph &operator*=(int scalar);
-        Graph &operator/=(int scalar);
-        
-        bool operator==(const Graph &other) const;
-        bool operator!=(const Graph &other) const;
-        bool operator<(const Graph &other) const;
-        bool operator>(const Graph &other) const;
-        bool operator<=(const Graph &other) const;
-        bool operator>=(const Graph &other) const;
+        struct Edge {
+            int dest;
+            int weight;
+            Edge* next;
+        };
 
-        friend std::ostream &operator<<(std::ostream &os, const Graph &graph);
+        struct Node {
+            Edge* head;
+        };
+
+        Node head;
+        Node* adjList;
+        const int numVertices;
+
+
+        Graph(int vertices);
+        ~Graph();
+        void addEdge(int src, int dest, int weight = 1);
+        void removeEdge(int src, int dest);
+        void print_graph() const;
+        void print_edge() const;
+        void print_total_weight() const;
+        int size() const;
+        const Node* getAdjList() const { return adjList; };
+        const Node getHead() const { return head; };
+
+    private:
+        Edge* removeEdgeHelper(Edge* head, int dest);
     };
-}
 
-#endif
 
+} // namespace graph

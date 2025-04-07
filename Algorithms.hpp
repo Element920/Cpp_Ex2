@@ -1,23 +1,26 @@
-// israelmor555@gmail.com
-// 206508954
+//israelmor555@gmail.com
 
-#ifndef ALGORITHMS_H
-#define ALGORITHMS_H
+//
+// Created by israel on 3/23/25.
+//
 
-
+#ifndef ALGORITHMS_HPP
+#define ALGORITHMS_HPP
+#pragma once
 #include "Graph.hpp"
 
-namespace ariel
-{
-    class Algorithms
-    {
+
+namespace graph {
+
+    class Algorithms {
     public:
-        static bool isConnected(Graph g);
-        static bool isContainsCycle(Graph g);
-        static std::string shortestPath(Graph g, unsigned int startNode, unsigned int endNode);
-        static std::string isBipartite(Graph g);
-        static bool negativeCycle(const Graph g);
+        static Graph bfs(const Graph& g, int start);
+        static Graph dfs(const Graph& g, int start);
+        static Graph dijkstra(const Graph& g, int start);
+        static Graph prim(const Graph& g);
+        static Graph kruskal(const Graph& g);
     };
+
 }
 
 #endif

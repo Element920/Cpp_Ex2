@@ -1,222 +1,233 @@
-// israelmor555@gmail.com
-// 206508954
+//israelmor555@gmail.com
 
-
+//
+// Created by israel on 3/23/25.
+//
 #include "Algorithms.hpp"
-#include <iostream>
-#include <sstream> 
-#include <string>
-#include <vector>
-#include <queue>
-#include <stack>
-#include <vector>
-#include <cstdlib>
-#include <algorithm>
-#include <limits>
+#include "DataStructures.hpp"
+#include "Graph.hpp"
+#include <climits>
+#include <stdexcept>
+#include "iostream"
 
-namespace ariel {
+namespace graph {
 
-bool Algorithms::isConnected(Graph g) {
-    unsigned int numNodes = g.getNumVertices();
-    if (numNodes == 0) return true; // Empty graph is considered connected
+    Graph Algorithms::bfs(const Graph& g, int start) {
+        int n = g.size();
+        Graph tree(n);
 
-    std::vector<bool> visited(numNodes, false);
-    std::queue<unsigned int> q;
-    unsigned int startNode = 0;
+        bool* visited = new bool[n]();
+        Queue q(n);
 
-    // Mark the start node as visited and enqueue it
-    visited[startNode] = true;
-    q.push(startNode);
+        visited[start] = true;
+        q.push(start);
 
-    while (!q.empty()) {
-        // Dequeue a node from the queue
-        unsigned int currentNode = q.front();
-        q.pop();
+        int* order = new int[n];
+        int orderIndex = 0;
 
-        // Visit all adjacent nodes of the dequeued node
-        for (unsigned int neighbor = 0; neighbor < numNodes; ++neighbor) {
-            if (g.getEdgeWeight(currentNode, neighbor) != 0 && !visited[neighbor]) {
-                // Mark the adjacent node as visited and enqueue it
-                visited[neighbor] = true;
-                q.push(neighbor);
-            }
-        }
-    }
-
-    // Check if all nodes were visited
-    for (bool nodeVisited : visited) {
-        if (!nodeVisited) {
-            return false;
-        }
-    }
-    return true;
-}
-
-bool Algorithms::isContainsCycle(Graph g) {
-    unsigned int numNodes = g.getNumVertices();
-    if (numNodes == 0) return false; // Empty graph cannot have a cycle
-
-    std::vector<bool> visited(numNodes, false);
-    std::stack<unsigned int> stack;
-    std::vector<int> parent(numNodes, -1);
-    stack.push(0);
-    visited[0] = true;
-
-    while (!stack.empty()) {
-        unsigned int currentNode = stack.top();
-        stack.pop();
-
-        for (unsigned int neighbor = 0; neighbor < numNodes; ++neighbor) {
-            if (g.getEdgeWeight(currentNode, neighbor) != 0) {
-                if (!visited[neighbor]) {
-                    visited[neighbor] = true;
-                    parent[neighbor] = static_cast<int>(currentNode); // Explicit conversion to int
-                    stack.push(neighbor);
-                } else if (parent[currentNode] != static_cast<int>(neighbor)) { // Explicit conversion to int
-                    return true;
+        while (!q.empty()) {
+            int v = q.pop();
+            order[orderIndex++] = v;  // שומר את הקודקודים לפי סדר הביקור
+            const Graph::Node* adjList = g.getAdjList();
+            for (Graph::Edge* e = adjList[v].head; e; e = e->next) {
+                if (!visited[e->dest]) {
+                    visited[e->dest] = true;
+                    tree.addEdge(v, e->dest, e->weight);
+                    q.push(e->dest);
                 }
             }
         }
+
+        std::cout << "BFS: ";
+        for (int i = 0; i < orderIndex; ++i) {
+            std::cout << order[i] << (i == orderIndex - 1 ? "" : ", ");
+        }
+        std::cout << std::endl;
+
+        delete[] visited;
+        delete[] order;
+        return tree;
     }
-    return false;
-}
 
-std::string Algorithms::shortestPath(const Graph g, unsigned int startNode, unsigned int endNode) {
-    unsigned int numVertices = g.getNumVertices();
-    if (startNode >= numVertices || endNode >= numVertices) return "-1";
 
-    std::vector<bool> visited(numVertices, false);
-    std::vector<int> parent(numVertices, -1);
+    Graph Algorithms::dfs(const Graph& g, int start) {
+        int n = g.size();
+        Graph tree(n);
 
-    std::queue<unsigned int> queue;
-    queue.push(startNode);
-    visited[startNode] = true;
+        bool* visited = new bool[n]();
+        Stack s(n);
 
-    bool found = false;
-    while (!queue.empty() && !found) {
-        unsigned int u = queue.front();
-        queue.pop();
+        s.push(start);
+        visited[start] = true;
 
-        for (unsigned int neighbor = 0; neighbor < numVertices; neighbor++) {
-            if (g.getEdgeWeight(u, neighbor) > 0 && !visited[neighbor]) {
-                visited[neighbor] = true;
-                parent[neighbor] = static_cast<int>(u); // Explicit conversion to int
-                queue.push(neighbor);
+        int* order = new int[n];
+        int orderIndex = 0;
 
-                if (neighbor == endNode) {
-                    found = true;
-                    break;
+        while (!s.empty()) {
+            int v = s.pop();
+            order[orderIndex++] = v;
+            const Graph::Node* adjList = g.getAdjList();
+            for (Graph::Edge* e = adjList[v].head; e; e = e->next) {
+                if (!visited[e->dest]) {
+                    visited[e->dest] = true;
+                    tree.addEdge(v, e->dest, e->weight);
+                    s.push(e->dest);
                 }
             }
         }
-    }
 
-    if (!found) {
-        return "-1"; // No path found between startNode and endNode
-    }
-
-    // Reconstruct path by backtracking from endNode
-    std::vector<unsigned int> path;
-    int current = static_cast<int>(endNode); // Explicit conversion to int
-    while (current != -1) {
-        path.push_back(static_cast<unsigned int>(current)); // Explicit conversion to unsigned int
-        current = parent[static_cast<size_t>(current)]; // Explicit conversion to std::vector::size_type
-    }
-
-    std::stringstream ss;
-    std::reverse(path.begin(), path.end());
-    for (size_t i = 0; i < path.size(); ++i) {
-        if (i != 0) {
-            ss << "->";
+        std::cout << "DFS: ";
+        for (int i = 0; i < orderIndex; ++i) {
+            std::cout << order[i] << (i == orderIndex - 1 ? "" : ", ");
         }
-        ss << path[i];
+        std::cout << std::endl;
+
+        delete[] visited;
+        delete[] order;
+        return tree;
     }
 
-    return ss.str();
-}
 
+    Graph Algorithms::dijkstra(const Graph& g, int start) {
+    int n = g.size();
+    Graph shortestPathTree(n);
 
-std::string Algorithms::isBipartite(Graph g) {
-    unsigned int numVertices = g.getNumVertices();
-    if (numVertices == 0) return "The graph is bipartite: A={}, B={}";
-
-    std::vector<int> color(numVertices, -1); // -1: uncolored, 0/1: assigned color 
-    std::vector<unsigned int> set1, set2;
-    unsigned int startNode = 0;
-    color[startNode] = 1;
-
-    std::queue<unsigned int> queue;
-    queue.push(startNode);
-    set1.push_back(startNode);
-
-    while (!queue.empty()) {
-        unsigned int u = queue.front();
-        queue.pop();
-
-        if (g.getEdgeWeight(u, u) > 0)
-            return "0";
-
-        for (unsigned int v = 0; v < numVertices; ++v) {
-            if (g.getEdgeWeight(u, v) && color[v] == -1) {
-                color[v] = 1 - color[u];
-                if (color[v] == 1) {
-                    set1.push_back(v);
-                } else {
-                    set2.push_back(v);
-                }
-                queue.push(v);
-            } else if (g.getEdgeWeight(u, v) && color[v] == color[u]) {
-                return "0";
+    const Graph::Node* adjList = g.getAdjList();
+    for (int i = 0; i < n; ++i) {
+        for (Graph::Edge* e = adjList[i].head; e; e = e->next) {
+            if (e->weight < 0) {
+                throw std::invalid_argument("Error: Negative edge weight detected. Dijkstra's algorithm cannot handle negative edges.");
             }
         }
     }
 
-    std::stringstream ss;
-    ss << "The graph is bipartite: A={";
-    for (size_t i = 0; i < set1.size(); ++i) {
-        if (i != 0)
-            ss << ", ";
-        ss << set1[i];
+    int* dist = new int[n];
+    bool* visited = new bool[n]();
+    PriorityQueue pq(n);
+
+    for (int i = 0; i < n; ++i) {
+        dist[i] = INT_MAX;
     }
-    ss << "}, B={";
-    for (size_t i = 0; i < set2.size(); ++i) {
-        if (i != 0)
-            ss << ", ";
-        ss << set2[i];
-    }
-    ss << "}";
-    return ss.str();
-}
+    dist[start] = 0;
+    pq.push(start, 0);
 
-bool Algorithms::negativeCycle(Graph g) {
-    unsigned int numVertices = g.getNumVertices();
-    if (numVertices == 0) return false; // Empty graph cannot have a negative cycle
+    while (!pq.empty()) {
+        int u = pq.pop();
+        if (visited[u]) continue;
+        visited[u] = true;
 
-    std::vector<int> distance(numVertices, std::numeric_limits<int>::max());
-    distance[0] = 0; // Distance from source to itself is 0
-
-    // Relaxation process (V-1 iterations)
-    for (unsigned int i = 0; i < numVertices - 1; ++i) {
-        for (unsigned int u = 0; u < numVertices; ++u) {
-            for (unsigned int v = 0; v < numVertices; ++v) {
-                // Relax if edge exists and total weight is less than current distance
-                if (g.getEdgeWeight(u, v) != 0 && distance[u] != std::numeric_limits<int>::max() && distance[u] + g.getEdgeWeight(u, v) < distance[v]) {
-                    distance[v] = distance[u] + g.getEdgeWeight(u, v);
-                }
+        for (Graph::Edge* e = adjList[u].head; e; e = e->next) {
+            if (dist[u] + e->weight < dist[e->dest]) {
+                dist[e->dest] = dist[u] + e->weight;
+                pq.push(e->dest, dist[e->dest]);
+                shortestPathTree.addEdge(u, e->dest, e->weight);
             }
         }
     }
 
-    // Check for negative cycle in the Vth iteration
-    for (unsigned int u = 0; u < numVertices; ++u) {
-        for (unsigned int v = 0; v < numVertices; ++v) {
-            if (g.getEdgeWeight(u, v) != 0 && distance[u] != std::numeric_limits<int>::max() && distance[u] + g.getEdgeWeight(u, v) < distance[v]) {
-                return true; // Negative cycle detected
+    delete[] dist;
+    delete[] visited;
+    return shortestPathTree;
+}
+    Graph Algorithms::prim(const Graph& g) {
+    int V = g.size();
+    Graph mst(V);
+
+    int* parent = new int[V];       // Store constructed MST
+    int* key = new int[V];          // Minimum edge weight
+    bool* inMST = new bool[V];
+
+    PriorityQueue pq(V);
+
+    // Initialize all keys as INFINITE and inMST to false
+    for (int i = 0; i < V; i++) {
+        key[i] = INT_MAX;
+        inMST[i] = false;
+    }
+
+    // Start from vertex 0
+    key[0] = 0;
+    parent[0] = -1;
+    pq.push(0, 0); // Push root node to priority queue
+
+    while (!pq.empty()) {
+        int u = pq.pop();
+        inMST[u] = true;
+
+        // Traverse all adjacent vertices of u
+        const Graph::Node* adjList = g.getAdjList();
+        for (Graph::Edge* e = adjList[u].head; e; e = e->next) {
+            int v = e->dest;
+            int weight = e->weight;
+
+            // Check if v is not in MST and weight is smaller
+            if (!inMST[v] && weight < key[v]) {
+                key[v] = weight;
+                parent[v] = u;
+                pq.push(v, key[v]);
             }
         }
     }
 
-    return false; // No negative cycle found
+    // Build the MST using parent array
+    for (int i = 1; i < V; i++) {
+        mst.addEdge(parent[i], i, key[i]);
+    }
+
+
+    delete[] parent;
+    delete[] key;
+    delete[] inMST;
+
+    return mst;
 }
 
+    Graph Algorithms::kruskal(const Graph& g) {
+    int n = g.size();
+    Graph mst(n);
+    UnionFind uf(n);
+
+    struct EdgeData {
+        int src, dest, weight;
+    };
+
+    EdgeData* edges = new EdgeData[n * n];
+    int edgeCount = 0;
+
+    // מעתיקים את כל הקשתות למערך edges
+    for (int i = 0; i < n; i++) {
+        Graph::Edge* e = g.getAdjList()[i].head;
+        while (e != nullptr) {
+            if (i < e->dest) { // נמנע מכפילויות
+                edges[edgeCount++] = {i, e->dest, e->weight};
+            }
+            e = e->next;
+        }
+    }
+
+    // מיון הבועות על המערך edges לפי המשקל
+    for (int i = 0; i < edgeCount - 1; i++) {
+        for (int j = 0; j < edgeCount - i - 1; j++) {
+            if (edges[j].weight > edges[j + 1].weight) {
+                EdgeData temp = edges[j];
+                edges[j] = edges[j + 1];
+                edges[j + 1] = temp;
+            }
+        }
+    }
+
+    // הוספת הקשתות עם Union-Find
+    for (int i = 0; i < edgeCount; i++) {
+        int u = edges[i].src;
+        int v = edges[i].dest;
+        if (uf.find(u) != uf.find(v)) {
+            uf.unite(u, v);
+            mst.addEdge(u, v, edges[i].weight);
+        }
+    }
+
+    delete[] edges;
+    return mst;
 }
+}  // namespace graph
+
